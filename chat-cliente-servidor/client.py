@@ -22,19 +22,20 @@ def client():
 		print ('Uso: client_chat <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
 		sys.exit()
 
-username = sys.argv[1]  
-host = sys.argv[2]
-port = int(sys.argv[3])
+USERNAME = sys.argv[1]
+HOST = sys.argv[2]
+PORT = int(sys.argv[3])
 
 #AF_INET == ipv4 ------- SOCK_STREAM == TCP
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # conectando ao server
-try :
-    s.connect((host, port))
-except :
-    print ('Não foi possivel conectar ao servidor')
+try:
+    s.connect((HOST, PORT))
+except Exception:
+    print ('Não foi possivel conectar ao servidor.')
     sys.exit()
 
 if __name__ == "__main__":
-	sys.exit(client())
+    client()
+    sys.exit()
