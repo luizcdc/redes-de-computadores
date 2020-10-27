@@ -2,6 +2,7 @@ from socket import AF_INET, SOCK_STREAM, socket, gethostbyname, gethostname
 from threading import Thread
 from select import select
 from sys import argv
+from datetime import datetime
 
 NUM_BYTES = 2000
 users_connected = []
@@ -26,7 +27,9 @@ def remove_connection(connection):
     return
 
 def send(connection,message):
-    pass
+    for(user in users_connected):
+        if(user[0] != connection ):
+            connection.send(message)
 
 def send_to(connection,message):
     pass
@@ -57,7 +60,6 @@ def erro(connection='',message='',tipo="undisclosed"):
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
     global users_connected
-
     nickname = connection.recv(NUM_BYTES)
     if (nickname in (c[1] for c in users_connected)) or (' ' in nickname):
         # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
@@ -72,7 +74,7 @@ def thread_client(connection, address):
             if x[0] == connection:
                 x[1] = nickname
                 break
-
+        # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
     while True:
         received = str(connection.recv(NUM_BYTES),'utf-8')
         try:
@@ -94,8 +96,6 @@ def thread_client(connection, address):
             print(f"TODO: HORÁRIO{nickname} desconectado.")
             return
 
-
-
 if __name__ == "__main__":
     try:
         # cria um socket servidor na porta passada como argumento do programa
@@ -104,7 +104,6 @@ if __name__ == "__main__":
         server_socket = socket(AF_INET,SOCK_STREAM)
         server_socket.bind((gethostbyname(gethostname()),int(PORT_NUM)))
         server_socket.listen(127)
-
 
         while True:
             if socket_available():
