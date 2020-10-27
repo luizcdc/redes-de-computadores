@@ -38,7 +38,10 @@ def help_(connection):
     pass
 
 def who(connection):
-    pass
+    global users_connected
+    c.send("USUÁRIOS CONECTADOS:")
+    for c in users_connected:
+        connection.send(c[1])
 
 def erro(connection='',message='',tipo="undisclosed"):
     pass
