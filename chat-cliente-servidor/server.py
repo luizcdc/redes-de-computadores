@@ -7,6 +7,7 @@ from datetime import datetime
 NUM_BYTES = 2000
 users_connected = []
 
+
 # definir as funções que executam cada comando suportado pelo servidor
 
 def socket_available():
@@ -24,6 +25,24 @@ def remove_connection(connection):
     connection.shutdown()
     connection.close()
     return
+
+def send(connection,message):
+    for(user in users_connected):
+        if(user[0] != connection ):
+            connection.send(message)
+
+def send_to(connection,message):
+    pass
+
+def help_(connection):
+    pass
+
+def who(connection):
+    pass
+
+def erro(connection='',message='',tipo="undisclosed"):
+    pass
+
 
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
@@ -44,14 +63,25 @@ def thread_client(connection, address):
                 break
         # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
     while True:
-        command = connection.recv(NUM_BYTES).decode("utf-8") 
-        # identifica o comando e chama a função que executa o comando
-        pass
+        received = str(connection.recv(NUM_BYTES),'utf-8')
+        try:
+            command = received.split(maxsplit=1)[0]
+            if command == "SEND":
+                send(connection,received)
+            elif command == "SENDTO":
+                send_to(connection,received)
+            elif commend == "HELP":
+                help_(connection)
+            elif command == "WHO":
+                who(connection)
+            else:
+                erro(connection,message)
 
-def send(connection, message):
-    for(user in users_connected):
-        if(user[0] != connection ):
-            connection.send(message)
+        except (IndexError, AttributeError):
+            # um socket só retorna com 0 bytes se a conexão está quebrada.
+            erro(connection,message,tipo="mensagem vazia")
+            print(f"TODO: HORÁRIO{nickname} desconectado.")
+            return
 
 if __name__ == "__main__":
     try:
@@ -67,9 +97,9 @@ if __name__ == "__main__":
                 connection, address = server_socket.accept()
                 users_connected.append([connection,None])
 
-                # cria e inicia thread desse cliente que acabou de conectar
+                # TODO: cria e inicia thread desse cliente que acabou de conectar
                 # thread_client.daemon = True
 
     except KeyboardInterrupt: # captura o CTRL+C
-        # fecha todas as conexões
+        # TODO: fechar todas as conexões
         quit()
