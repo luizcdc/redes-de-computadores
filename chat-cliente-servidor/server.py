@@ -27,9 +27,11 @@ def remove_connection(connection):
     return
 
 def send(connection,message):
-    for(user in users_connected):
-        if(user[0] != connection ):
+    for user in users_connected:
+        if user[0] != connection:
             connection.send(message)
+            # TODO: inserir horário, remover o comando e garantir que serão
+            # enviados exatamente NUM_BYTES sempre.
 
 def send_to(connection,message):
     pass
@@ -43,7 +45,7 @@ def help_(connection):
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n", 'utf-8')
     help_message += " " * (NUM_BYTES - len(bytes(help_message,'utf-8')))
-    
+
     connection.sendall(bytes(help_message,'utf-8'))
 
 
