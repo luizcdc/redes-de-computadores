@@ -26,13 +26,17 @@ def remove_connection(connection):
     connection.close()
     return
 
-def send(connection,message):
-    for(user in users_connected):
-        if(user[0] != connection ):
-            connection.send(message)
+def send(connection, message):
+    global users_connected
+    for user in users_connected:
+        if (user[0] != connection):
+            user[0].send(message)
 
-def send_to(connection,message):
-    pass
+def send_to(connection, message, receiver):
+    global users_connected
+    for user in users_connected:
+        if (user[1] == receiver):
+           user[0].send(message)
 
 def help_(connection):
     pass
