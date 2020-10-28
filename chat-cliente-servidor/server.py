@@ -67,7 +67,7 @@ def send(connection, nickname, message):
         for user in users_connected:
             if user[0] != connection:
                 try:
-                    connection.sendall(message_to_binary(
+                    user[0].sendall(message_to_binary(
                         f"{nickname}: {message}"))
                 except Exception:
                     executed = "Não"
@@ -82,7 +82,7 @@ def send(connection, nickname, message):
 def send_to(connection, sender_nickname, message):
     global users_connected
     message = message.split(maxsplit=2)
-    if len(message != 2):
+    if len(message ) != 2:
         erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
