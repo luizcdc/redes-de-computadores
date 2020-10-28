@@ -26,11 +26,12 @@ def remove_connection(connection):
     connection.close()
     return
 
-def send(connection, message):
-    global users_connected
+def send(connection,message):
     for user in users_connected:
-        if (user[0] != connection):
-            user[0].send(message)
+        if user[0] != connection:
+            connection.send(message)
+            # TODO: inserir horário, remover o comando e garantir que serão
+            # enviados exatamente NUM_BYTES sempre.
 
 def send_to(connection, message, receiver):
     global users_connected
@@ -39,7 +40,17 @@ def send_to(connection, message, receiver):
            user[0].send(message)
 
 def help_(connection):
-    pass
+    help_message =  ("COMANDOS SUPORTADOS:\n"
+                    "HELP -> listar os comandos suportados\n"
+                    "WHO -> exibir uma lista dos usuários conectados.\n"
+                    "SEND <MESSAGE>-> enviar uma mensagem para todos os usuários.\n"
+                    "SENDTO <CLIENT_NAME> <MESSAGE>\n\n"
+                    "Pressione CTRL+C a qualquer momento para encerrar a "
+                    "conexão com o servidor e fechar o cliente de chat.\n", 'utf-8')
+    help_message += " " * (NUM_BYTES - len(bytes(help_message,'utf-8')))
+
+    connection.sendall(bytes(help_message,'utf-8'))
+
 
 def who(connection):
     global users_connected
