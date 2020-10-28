@@ -4,6 +4,7 @@ from select import select
 from sys import argv
 from datetime import datetime
 
+ENCODING = 'utf-8'
 NUM_BYTES = 2000
 users_connected = []
 
@@ -25,6 +26,31 @@ def remove_connection(connection):
     connection.shutdown()
     connection.close()
     return
+def binary_message_to_string(message):
+    """Reconverte a mensagem recebida de binário para string."""
+    message = str(message, ENCODING)
+    return message.split('\0',maxsplit=1)[0]
+
+def message_to_binary(message):
+    """Converte a mensagem para binário.
+
+    Caso a mensagem seja muito grande, trunca a mensagem para NUM_BYTES bytes.
+    caso seja muito pequena, insere '\0' no fim da mensagem até seu tamanho
+    ser igual a NUM_BYTES.
+    """
+    size_message = len(bytes(message,ENCODING))
+    if size_message > NUM_BYTES:
+        # TODO : CHAMAR erro() para sinalizar que a mensagem é muito grande
+        message = message[:NUM_BYTES]
+        size_message = len(bytes(message,ENCODING))
+        while (size_message > 2000):
+            # necessário pois alguns caracteres utf-8 têm mais que 1 byte.
+            message = message[:-1]
+            size_message = len(bytes(message,ENCODING))
+
+    message += "\0" * (NUM_BYTES - size_message)
+
+    return bytes(message,ENCODING)
 
 def send(connection,message):
     for user in users_connected:
@@ -46,10 +72,9 @@ def help_(connection):
                     "SEND <MESSAGE>-> enviar uma mensagem para todos os usuários.\n"
                     "SENDTO <CLIENT_NAME> <MESSAGE>\n\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
-                    "conexão com o servidor e fechar o cliente de chat.\n", 'utf-8')
-    help_message += " " * (NUM_BYTES - len(bytes(help_message,'utf-8')))
-
-    connection.sendall(bytes(help_message,'utf-8'))
+                    "conexão com o servidor e fechar o cliente de chat.\n")
+    help_message = message_to_binary(help_message)
+    connection.sendall(help_message)
 
 
 def who(connection):
@@ -81,7 +106,7 @@ def thread_client(connection, address):
                 break
         # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
     while True:
-        received = str(connection.recv(NUM_BYTES),'utf-8')
+        received = str(connection.recv(NUM_BYTES),ENCODING)
         try:
             command = received.split(maxsplit=1)[0]
             if command == "SEND":
