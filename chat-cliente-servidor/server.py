@@ -53,19 +53,39 @@ def message_to_binary(message):
 
     return bytes(message,ENCODING)
 
-def send(connection, message):
+def send(connection, nickname, message):
     global users_connected
-    message = message_to_binary(connection[1]+": "+ message)
     for user in users_connected:
         if user[0] != connection:
-            connection.send(message)
+            try:
+                connection.sendall(message_to_binary(f"{nickname}:{message}")):
+                execute = "Sim"
+            except Exception:
+                execute = "Não"
 
-def send_to(connection, message, receiver):
+            messageserver = (datetime.now().strftime("%H:%M ") + nickname +  " SEND Executado: " + execute)
+            print(messageserver)
+
+def send_to(connection, sender_nickname, message):
     global users_connected
-    message = message_to_binary(connection[1]+": "+ message)
-    for user in users_connected:
-        if (user[1] == receiver):
-           user[0].send(message)
+    message = message.split(maxplit=1)
+    if len(message != 2):
+        # TODO: chamar erro() para sinalizar que o comando não recebeu os
+        # argumentos corretos
+    else:
+        # filter retorna uma lista com a entrada [socket,nickname] do usuário
+        # destino em users_connected, ou uma lista vazia se não existir esse
+        # usuário. Nesse último caso, envia mensagem de erro de volta para
+        # o cliente.
+        dest_nick = message[0]
+        # TODO: adicionar horário e nome do remetente à mensagem
+        dest_socket = list(filter(lambda u: u[1] == dest_nick, users_connected))
+        if dest_socket:
+            dest_socket[0][0].sendall(message_to_binary(message[1]))
+        else:
+            # TODO: chamar erro() para sinalizar que o usuário especificado
+            # não está conectado ao servidor
+
 
 def help_(connection):
     help_message =  ("COMANDOS SUPORTADOS:\n"
@@ -108,13 +128,13 @@ def thread_client(connection, address):
                 break
         # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
     while True:
-        received = str(connection.recv(NUM_BYTES),ENCODING)
         try:
-            command = received.split(maxsplit=1)[0]
+            received = str(connection.recv(NUM_BYTES),ENCODING)
+            command, message = received.split(maxsplit=1)
             if command == "SEND":
-                send(connection,received)
+                send(connection, nickname, message)
             elif command == "SENDTO":
-                send_to(connection,received)
+                send_to(connection,nickname, message)
             elif commend == "HELP":
                 help_(connection)
             elif command == "WHO":
@@ -122,7 +142,7 @@ def thread_client(connection, address):
             else:
                 erro(connection,message)
 
-        except (IndexError, AttributeError):
+        except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection,message,tipo="mensagem vazia")
             print(f"TODO: HORÁRIO{nickname} desconectado.")
