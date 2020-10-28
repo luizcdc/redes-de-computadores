@@ -58,7 +58,7 @@ def send(connection, nickname, message):
     for user in users_connected:
         if user[0] != connection:
             try:
-                connection.sendall(message_to_binary(f"{nickname}:{message}")):
+                connection.sendall(message_to_binary(f"{nickname}:{message}"))
                 execute = "Sim"
             except Exception:
                 execute = "Não"
@@ -70,6 +70,7 @@ def send_to(connection, sender_nickname, message):
     global users_connected
     message = message.split(maxplit=1)
     if len(message != 2):
+        erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
@@ -83,6 +84,7 @@ def send_to(connection, sender_nickname, message):
         if dest_socket:
             dest_socket[0][0].sendall(message_to_binary(message[1]))
         else:
+            pass
             # TODO: chamar erro() para sinalizar que o usuário especificado
             # não está conectado ao servidor
 
