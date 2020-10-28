@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+from server import binary_message_to_string, message_to_binary
 
 # definir aqui funções a serem utilizadas
 
@@ -17,25 +18,40 @@ import sys
 # 1.1 - CASO USUÁRIO APERTE CTRL+C, PRIMEIRO FECHA A CONEXÃO, IMPRIME "Conexão encerrada." E SAIR DO PROGRAMA. (usar try except, a exceção é KeyboardInterrupt)
 # 2 - imprimir qualquer mensagem que o servidor enviar para esse cliente
 
-def client():
-	if(len(sys.argv) < 4):
-		print ('Uso: client_chat <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
-		sys.exit()
-
-USERNAME = sys.argv[1]
-HOST = sys.argv[2]
-PORT = int(sys.argv[3])
-
-#AF_INET == ipv4 ------- SOCK_STREAM == TCP
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# AF_INET == ipv4 ------- SOCK_STREAM == TCP
 
 # conectando ao server
-try:
-    s.connect((HOST, PORT))
-except Exception:
-    print ('Não foi possivel conectar ao servidor.')
-    sys.exit()
+
+def client():
+    if (len(sys.argv) == 4):
+        USERNAME = sys.argv[1]
+        HOST = sys.argv[2]
+        PORT = int(sys.argv[3])
+
+        try:
+            socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dest = (HOST, PORT)
+            socket_connection.connect(dest)
+            print("Conectado com sucesso!")
+            msg = input()
+            socket_connection.sendall(message_to_binary(USERNAME))
+            while msg != '\3': # \x18 = captura do control + x do terminal. \3 => control + c
+                socket_connection.sendall(message_to_binary(msg))
+                msg = input()
+        except KeyboardInterrupt:  # captura o CTRL+C
+            # TODO: fechar todas as conexões
+            sys.exit()
+        except Exception:
+            print("Falha na conexão")
+            socket_connection.close()
+
+    else:
+        print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
+
 
 if __name__ == "__main__":
-    client()
+    try:
+        client()
+    except:
+        pass
     sys.exit()
