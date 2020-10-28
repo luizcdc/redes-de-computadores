@@ -34,7 +34,6 @@ def binary_message_to_string(message):
 
 def message_to_binary(message):
     """Converte a mensagem para binário.
-
     Caso a mensagem seja muito grande, trunca a mensagem para NUM_BYTES bytes.
     caso seja muito pequena, insere '\0' no fim da mensagem até seu tamanho
     ser igual a NUM_BYTES.
@@ -103,7 +102,7 @@ def help_(connection):
 
 def who(connection):
     global users_connected
-    c.send("USUÁRIOS CONECTADOS:")
+    connection.send("USUÁRIOS CONECTADOS:")
     for c in users_connected:
         connection.send(c[1])
 
@@ -137,7 +136,7 @@ def thread_client(connection, address):
                 send(connection, nickname, message)
             elif command == "SENDTO":
                 send_to(connection,nickname, message)
-            elif commend == "HELP":
+            elif command == "HELP":
                 help_(connection)
             elif command == "WHO":
                 who(connection)
