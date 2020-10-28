@@ -54,20 +54,20 @@ def message_to_binary(message):
 
 def send(connection, nickname, message):
     global users_connected
+    executed = "Não"
     for user in users_connected:
         if user[0] != connection:
+            executed = "Sim"
             try:
-                connection.sendall(message_to_binary(f"{nickname}:{message}"))
-                execute = "Sim"
+                connection.sendall(message_to_binary(f"{nickname}: {message}"))
             except Exception:
-                execute = "Não"
-
-            messageserver = (datetime.now().strftime("%H:%M ") + nickname +  " SEND Executado: " + execute)
-            print(messageserver)
+                executed = "Não"
+    messageserver = (datetime.now().strftime("%H:%M ") + nickname +  " SEND Executado: " + executed)
+    print(messageserver)
 
 def send_to(connection, sender_nickname, message):
     global users_connected
-    message = message.split(maxplit=1)
+    message = message.split(' ',maxplit=1)
     if len(message != 2):
         erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
