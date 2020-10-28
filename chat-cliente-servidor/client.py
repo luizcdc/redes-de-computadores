@@ -19,9 +19,21 @@ from server import binary_message_to_string, message_to_binary
 # 2 - imprimir qualquer mensagem que o servidor enviar para esse cliente
 
 # AF_INET == ipv4 ------- SOCK_STREAM == TCP
+socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
 # conectando ao server
-
+def send_msg():
+    global socket_connection
+    try:
+        msg = input()
+        while True:
+            socket_connection.sendall(message_to_binary(msg))
+            msg = input()
+            if(msg == 'fim'): break
+    except KeyboardInterrupt:
+        # TODO: fechar todas as conexões
+        sys.exit()
 def client():
     if (len(sys.argv) == 4):
         USERNAME = sys.argv[1]
@@ -29,16 +41,20 @@ def client():
         PORT = int(sys.argv[3])
 
         try:
-            socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             dest = (HOST, PORT)
             socket_connection.connect(dest)
-            print("Conectado com sucesso!")
-            msg = input()
             socket_connection.sendall(message_to_binary(USERNAME))
-            while msg != '\3': # \x18 = captura do control + x do terminal. \3 => control + c
-                socket_connection.sendall(message_to_binary(msg))
-                msg = input()
-        except KeyboardInterrupt:  # captura o CTRL+C
+            print("Conectado com sucesso!")
+            thread_send = threading.Thread(target=send_msg, args=())
+            thread_send.daemon = True
+            thread_send.start()
+            while True:
+                msg_recebida = binary_message_to_string(socket_connection.recv(2000))
+                if(msg_recebida):
+                    print(msg_recebida)
+            # send_msg()
+
+        except KeyboardInterrupt:
             # TODO: fechar todas as conexões
             sys.exit()
         except Exception:
