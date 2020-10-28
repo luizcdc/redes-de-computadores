@@ -92,17 +92,24 @@ def send_to(connection, sender_nickname, message):
         # usuário. Nesse último caso, envia mensagem de erro de volta para
         # o cliente.
         dest_nick = message[1]
+        executed = "Sim"
         # TODO: adicionar horário e nome do remetente à mensagem
         dest_socket = list(
             filter(lambda u: u[1] == dest_nick, users_connected))
         if dest_socket:
-            dest_socket[0][0].sendall(message_to_binary(
-                f"{sender_nickname}:" + message[2]))
+            try:
+                dest_socket[0][0].sendall(message_to_binary(
+                    f"{sender_nickname}:" + message[2]))
+            except Exception:
+                executed = "Não"
         else:
             pass
             # TODO: chamar erro() para sinalizar que o usuário especificado
             # não está conectado ao servidor
-
+        
+    messageserver = (datetime.now().strftime("%H:%M ") +
+                    nickname + " SENDTO Executado: " + executed)
+    print(messageserver)
 
 def help_(connection):
     help_message = ("COMANDOS SUPORTADOS:\n"
@@ -144,7 +151,7 @@ def thread_client(connection, address):
             if x[0] == connection:
                 x[1] = nickname
                 break
-        # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
+        print(datetime.now().strftime("%H:%M+\t"+nickname+"\tConectado"))
     while True:
         try:
             received = str(connection.recv(NUM_BYTES), ENCODING)
