@@ -53,12 +53,12 @@ def message_to_binary(message):
 
     return bytes(message,ENCODING)
 
-def send(connection,message):
+def send(connection, message):
+    global users_connected
+    message = message_to_binary(connection[1]+": "+ message)
     for user in users_connected:
         if user[0] != connection:
             connection.send(message)
-            # TODO: inserir horário, remover o comando e garantir que serão
-            # enviados exatamente NUM_BYTES sempre.
 
 def send_to(connection, message, sender_nickname):
     global users_connected
