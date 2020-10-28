@@ -26,6 +26,7 @@ def remove_connection(connection):
     connection.shutdown()
     connection.close()
     return
+
 def binary_message_to_string(message):
     """Reconverte a mensagem recebida de binário para string."""
     message = str(message, ENCODING)
@@ -59,8 +60,26 @@ def send(connection,message):
             # TODO: inserir horário, remover o comando e garantir que serão
             # enviados exatamente NUM_BYTES sempre.
 
-def send_to(connection,message):
-    pass
+def send_to(connection, message, sender_nickname):
+    global users_connected
+    message = message.split(maxplit=1)
+    if len(message != 2):
+        # TODO: chamar erro() para sinalizar que o comando não recebeu os
+        # argumentos corretos
+    else:
+        # filter retorna uma lista com a entrada [socket,nickname] do usuário
+        # destino em users_connected, ou uma lista vazia se não existir esse
+        # usuário. Nesse último caso, envia mensagem de erro de volta para
+        # o cliente.
+        dest_nick = message[0]
+        # TODO: adicionar horário e nome do remetente à mensagem
+        dest_socket = list(filter(lambda u: u[1] == dest_nick, users_connected))
+        if dest_socket:
+            dest_socket[0][0].sendall(message_to_binary(message[1]))
+        else:
+            # TODO: chamar erro() para sinalizar que o usuário especificado
+            # não está conectado ao servidor
+
 
 def help_(connection):
     help_message =  ("COMANDOS SUPORTADOS:\n"
