@@ -11,12 +11,14 @@ users_connected = []
 
 # definir as funções que executam cada comando suportado pelo servidor
 
+
 def socket_available():
     """Retorna se o socket do servidor tem nova(s) conexões pendentes."""
     global server_socket
 
-    available = select([server_socket],[],[],0.25)[0]
+    available = select([server_socket], [], [], 0.25)[0]
     return True if available else False
+
 
 def remove_connection(connection):
     """Remove uma conexão da lista users_connected e a encerra."""
@@ -27,10 +29,12 @@ def remove_connection(connection):
     connection.close()
     return
 
+
 def binary_message_to_string(message):
     """Reconverte a mensagem recebida de binário para string."""
     message = str(message, ENCODING)
-    return message.split('\0',maxsplit=1)[0]
+    return message.split('\0', maxsplit=1)[0]
+
 
 def message_to_binary(message):
     """Converte a mensagem para binário.
@@ -38,19 +42,20 @@ def message_to_binary(message):
     caso seja muito pequena, insere '\0' no fim da mensagem até seu tamanho
     ser igual a NUM_BYTES.
     """
-    size_message = len(bytes(message,ENCODING))
+    size_message = len(bytes(message, ENCODING))
     if size_message > NUM_BYTES:
         # TODO : CHAMAR erro() para sinalizar que a mensagem é muito grande
         message = message[:NUM_BYTES]
-        size_message = len(bytes(message,ENCODING))
+        size_message = len(bytes(message, ENCODING))
         while (size_message > 2000):
             # necessário pois alguns caracteres utf-8 têm mais que 1 byte.
             message = message[:-1]
-            size_message = len(bytes(message,ENCODING))
+            size_message = len(bytes(message, ENCODING))
 
     message += "\0" * (NUM_BYTES - size_message)
 
-    return bytes(message,ENCODING)
+    return bytes(message, ENCODING)
+
 
 def send(connection, nickname, message):
     global users_connected
@@ -62,12 +67,14 @@ def send(connection, nickname, message):
                 connection.sendall(message_to_binary(f"{nickname}: {message}"))
             except Exception:
                 executed = "Não"
-    messageserver = (datetime.now().strftime("%H:%M ") + nickname +  " SEND Executado: " + executed)
+    messageserver = (datetime.now().strftime("%H:%M ") +
+                     nickname + " SEND Executado: " + executed)
     print(messageserver)
+
 
 def send_to(connection, sender_nickname, message):
     global users_connected
-    message = message.split(' ',maxplit=1)
+    message = message.split(' ', maxplit=1)
     if len(message != 2):
         erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
@@ -79,7 +86,8 @@ def send_to(connection, sender_nickname, message):
         # o cliente.
         dest_nick = message[0]
         # TODO: adicionar horário e nome do remetente à mensagem
-        dest_socket = list(filter(lambda u: u[1] == dest_nick, users_connected))
+        dest_socket = list(
+            filter(lambda u: u[1] == dest_nick, users_connected))
         if dest_socket:
             dest_socket[0][0].sendall(message_to_binary(message[1]))
         else:
@@ -89,7 +97,7 @@ def send_to(connection, sender_nickname, message):
 
 
 def help_(connection):
-    help_message =  ("COMANDOS SUPORTADOS:\n"
+    help_message = ("COMANDOS SUPORTADOS:\n"
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
                     "SEND <MESSAGE>-> enviar uma mensagem para todos os usuários.\n"
@@ -106,7 +114,8 @@ def who(connection):
     for c in users_connected:
         c.send(c[1])
 
-def erro(connection='',message='',tipo="undisclosed"):
+
+def erro(connection='', message='', tipo="undisclosed"):
     pass
 
 
@@ -130,43 +139,45 @@ def thread_client(connection, address):
         # print(datetime.now().strftime("%H:%M\tAndré Conectado"))
     while True:
         try:
-            received = str(connection.recv(NUM_BYTES),ENCODING)
+            received = str(connection.recv(NUM_BYTES), ENCODING)
             command, message = received.split(maxsplit=1)
             if command == "SEND":
                 send(connection, nickname, message)
             elif command == "SENDTO":
-                send_to(connection,nickname, message)
+                send_to(connection, nickname, message)
             elif command == "HELP":
                 help_(connection)
             elif command == "WHO":
                 who(connection)
             else:
-                erro(connection,message)
+                erro(connection, message)
 
         except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
-            erro(connection,message,tipo="mensagem vazia")
+            erro(connection, message, tipo="mensagem vazia")
             print(f"TODO: HORÁRIO{nickname} desconectado.")
             return
+
 
 if __name__ == "__main__":
     try:
         # cria um socket servidor na porta passada como argumento do programa
         # com o máximo de 127 conexões pendentes
         PORT_NUM = argv[1]
-        server_socket = socket(AF_INET,SOCK_STREAM)
-        server_socket.bind((gethostbyname(gethostname()),int(PORT_NUM)))
+        server_socket = socket(AF_INET, SOCK_STREAM)
+        server_socket.bind((gethostbyname(gethostname()), int(PORT_NUM)))
         server_socket.listen(127)
         while True:
             if socket_available():
                 connection, address = server_socket.accept()
-                users_connected.append([connection,''])
-                thread_user = threading.Thread(target=thread_client, args=(connection, address))
+                users_connected.append([connection, ''])
+                thread_user = threading.Thread(
+                    target=thread_client, args=(connection, address))
                 thread_user.daemon = True
                 thread_user.start()
                 # TODO: cria e inicia thread desse cliente que acabou de conectar
                 # thread_client.daemon = True
 
-    except KeyboardInterrupt: # captura o CTRL+C
+    except KeyboardInterrupt:  # captura o CTRL+C
         # TODO: fechar todas as conexões
         quit()
