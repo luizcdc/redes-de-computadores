@@ -1,3 +1,4 @@
+import threading
 from socket import AF_INET, SOCK_STREAM, socket, gethostbyname, gethostname
 from threading import Thread
 from select import select
@@ -7,7 +8,6 @@ from datetime import datetime
 ENCODING = 'utf-8'
 NUM_BYTES = 2000
 users_connected = []
-
 
 # definir as funções que executam cada comando suportado pelo servidor
 
@@ -104,7 +104,7 @@ def who(connection):
     global users_connected
     connection.send("USUÁRIOS CONECTADOS:")
     for c in users_connected:
-        connection.send(c[1])
+        c.send(c[1])
 
 def erro(connection='',message='',tipo="undisclosed"):
     pass
@@ -113,7 +113,7 @@ def erro(connection='',message='',tipo="undisclosed"):
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
     global users_connected
-    nickname = connection.recv(NUM_BYTES)
+    nickname = binary_message_to_string(connection.recv(NUM_BYTES))
     if (nickname in (c[1] for c in users_connected)) or (' ' in nickname):
         # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
         # da lista users_connected e retorna
@@ -157,12 +157,13 @@ if __name__ == "__main__":
         server_socket = socket(AF_INET,SOCK_STREAM)
         server_socket.bind((gethostbyname(gethostname()),int(PORT_NUM)))
         server_socket.listen(127)
-
         while True:
             if socket_available():
                 connection, address = server_socket.accept()
-                users_connected.append([connection,None])
-
+                users_connected.append([connection,''])
+                thread_user = threading.Thread(target=thread_client, args=(connection, address))
+                thread_user.daemon = True
+                thread_user.start()
                 # TODO: cria e inicia thread desse cliente que acabou de conectar
                 # thread_client.daemon = True
 

@@ -1,1 +1,4 @@
 /chat-cliente-servidor/venv/
+/chat-cliente-servidor/chat_server.py
+/chat-cliente-servidor/nosso_server.py
+.gitignore
