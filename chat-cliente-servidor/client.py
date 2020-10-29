@@ -52,22 +52,24 @@ def client():
                 msg_recebida = binary_message_to_string(socket_connection.recv(2000))
                 if(msg_recebida):
                     print(msg_recebida)
+                else:
+                    raise ConnectionError('O servidor desconectou.')
             # send_msg()
 
         except KeyboardInterrupt:
             # TODO: fechar todas as conexões
-            sys.exit()
-        except Exception:
-            print("Falha na conexão")
+            print('Desconectando')
+            sys.exit()    
+        except (ConnectionError, socket.error) as erro:
+            print('ERRO:', erro)
             socket_connection.close()
-
+        except Exception as erro:
+            print('ERROR: Erro não identificado', erro)
+            sys.exit()
     else:
         print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
 
 
 if __name__ == "__main__":
-    try:
-        client()
-    except:
-        pass
+    client()
     sys.exit()
