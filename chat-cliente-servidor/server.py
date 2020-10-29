@@ -82,7 +82,7 @@ def send(connection, nickname, message):
 def send_to(connection, sender_nickname, message):
     global users_connected
     message = message.split(maxsplit=2)
-    if len(message ) != 2:
+    if len(message ) != 3:
         erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
@@ -93,7 +93,6 @@ def send_to(connection, sender_nickname, message):
         # o cliente.
         dest_nick = message[1]
         executed = "Sim"
-        # TODO: adicionar horário e nome do remetente à mensagem
         dest_socket = list(
             filter(lambda u: u[1] == dest_nick, users_connected))
         if dest_socket:
@@ -102,16 +101,22 @@ def send_to(connection, sender_nickname, message):
                     f"{sender_nickname}:" + message[2]))
             except Exception:
                 executed = "Não"
+
+            messageserver = (datetime.now().strftime("%H:%M ") +
+            sender_nickname + " SENDTO Executado: " + executed)
+            print(messageserver)
         else:
-            pass
+            executed = "Não"
+            messageserver = (datetime.now().strftime("%H:%M ") +
+            sender_nickname + " SENDTO Executado: " + executed)
+            print(messageserver)
+            erro(connection, "Usuário '+dest_nick+' não está conectado no sistema.")
+            # connection.send(message_to_binary('Usuário ' + dest_nick + ' não está conectado no sistema.'))
             # TODO: chamar erro() para sinalizar que o usuário especificado
             # não está conectado ao servidor
-        
-    messageserver = (datetime.now().strftime("%H:%M ") +
-                    nickname + " SENDTO Executado: " + executed)
-    print(messageserver)
 
-def help_(connection):
+def commands_help(connection):
+    print('oi')
     help_message = ("COMANDOS SUPORTADOS:\n"
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
@@ -120,19 +125,18 @@ def help_(connection):
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
     help_message = message_to_binary(help_message)
-    connection.sendall(help_message)
+    connection.send(help_message)
 
 
 def who(connection):
     global users_connected
-    connection.send("USUÁRIOS CONECTADOS:")
+    connection.send(message_to_binary("USUÁRIOS CONECTADOS:"))
     for c in users_connected:
-        c.send(c[1])
+        connection.send(message_to_binary(c[1]))
 
 
 def erro(connection='', message='', tipo="undisclosed"):
-    pass
-
+    connection.send(message_to_binary(message))
 
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
@@ -154,25 +158,24 @@ def thread_client(connection, address):
         print(datetime.now().strftime("%H:%M+\t"+nickname+"\tConectado"))
     while True:
         try:
-            received = str(connection.recv(NUM_BYTES), ENCODING)
-            command = received.split(maxsplit=1)[0]
+            received = binary_message_to_string(connection.recv(NUM_BYTES))
+            command = str(received.split(maxsplit=1)[0])
             if command == "SEND":
                 send(connection, nickname, received)
             elif command == "SENDTO":
                 send_to(connection, nickname, received)
-            elif command == "HELP":
-                help_(connection)
+            elif received == "HELP":
+                commands_help(connection)
             elif command == "WHO":
                 who(connection)
             else:
-                erro(connection, received)
+                erro(connection, received+" não é um comando válido.")
 
         except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection, message, tipo="mensagem vazia")
             print(f"TODO: HORÁRIO{nickname} desconectado.")
             return
-
 
 if __name__ == "__main__":
     try:
