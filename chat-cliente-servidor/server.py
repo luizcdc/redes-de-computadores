@@ -78,7 +78,7 @@ def send(connection, nickname, message):
     else:
         executed = "Não"
 
-    messageserver = (datetime.now().strftime("%H:%M ") +
+    messageserver = (datetime.now().strftime("%H:%M: ") +
                      nickname + " SEND Executado: " + executed)
     print(messageserver)
 
@@ -86,12 +86,12 @@ def send(connection, nickname, message):
 def send_to(connection, sender_nickname, message):
     global users_connected
     message = message.split(maxsplit=2)
-    if len(message ) != 3:
+    if len(message) != 3:
         erro()
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
-        # filter retorna uma lista com a entrada [socket,nickname] do usuário
+        # filter retorna uma lista com a entrada [socket, nickname] do usuário
         # destino em users_connected, ou uma lista vazia se não existir esse
         # usuário. Nesse último caso, envia mensagem de erro de volta para
         # o cliente.
@@ -106,12 +106,12 @@ def send_to(connection, sender_nickname, message):
             except Exception:
                 executed = "Não"
 
-            messageserver = (datetime.now().strftime("%H:%M ") +
+            messageserver = (datetime.now().strftime("%H:%M: ") +
             sender_nickname + " SENDTO Executado: " + executed)
             print(messageserver)
         else:
             executed = "Não"
-            messageserver = (datetime.now().strftime("%H:%M ") +
+            messageserver = (datetime.now().strftime("%H:%M: ") +
             sender_nickname + " SENDTO Executado: " + executed)
             print(messageserver)
             erro(connection, "Usuário '+dest_nick+' não está conectado no sistema.")
@@ -120,7 +120,6 @@ def send_to(connection, sender_nickname, message):
             # não está conectado ao servidor
 
 def commands_help(connection):
-    print('oi')
     help_message = ("COMANDOS SUPORTADOS:\n"
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
@@ -128,8 +127,7 @@ def commands_help(connection):
                     "SENDTO <CLIENT_NAME> <MESSAGE> -> enviar uma mensagem para somente um usuário.\n\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
-    help_message = message_to_binary(help_message)
-    connection.send(help_message)
+    connection.sendall(message_to_binary(help_message))
 
 
 def who(connection):
@@ -177,8 +175,8 @@ def thread_client(connection, address):
 
         except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
-            erro(connection, message, tipo="mensagem vazia")
-            print(f"TODO: HORÁRIO{nickname} desconectado.")
+            erro(connection, tipo="mensagem vazia")
+            print(f"{datetime.now().strftime("%H:%M: ")} {nickname} desconectado.")
             return
 
 if __name__ == "__main__":
