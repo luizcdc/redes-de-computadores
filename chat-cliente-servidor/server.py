@@ -121,7 +121,7 @@ def commands_help(connection):
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
                     "SEND <MESSAGE>-> enviar uma mensagem para todos os usuários.\n"
-                    "SENDTO <CLIENT_NAME> <MESSAGE>\n\n"
+                    "SENDTO <CLIENT_NAME> <MESSAGE> -> enviar uma mensagem para somente um usuário.\n\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
     help_message = message_to_binary(help_message)
