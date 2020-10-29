@@ -149,6 +149,8 @@ def thread_client(connection, address):
         # da lista users_connected e retorna
         print("ERRO: falha na conexão com o cliente, o nome de usuário "
               "já está em uso.")
+        connection.sendall(message_to_binary(f"O usuário {nickname} já está"
+                                             "registrado no servidor.")
         remove_connection(connection)
         return
     else:

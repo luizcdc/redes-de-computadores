@@ -3,3 +3,7 @@
 /chat-cliente-servidor/nosso_server.py
 */__pycache__/
 .gitignore
+.vscode/*
+.vscode/
+*/.vscode/*
+*/.vscode/
