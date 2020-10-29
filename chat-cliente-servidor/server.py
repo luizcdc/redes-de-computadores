@@ -12,11 +12,11 @@ users_connected = []
 # definir as funções que executam cada comando suportado pelo servidor
 
 
-def socket_available():
-    """Retorna se o socket do servidor tem nova(s) conexões pendentes."""
-    global server_socket
-
-    available = select([server_socket], [], [], 0.25)[0]
+def socket_available(socket_):
+    """Retorna se um socket específico tem dados pendentes para leitura
+    ou conexões pendentes para serem aceitas.
+    """
+    available = select([socket], [], [], 0.25)[0]
     return True if available else False
 
 def close_all_connections():
@@ -34,15 +34,14 @@ def remove_connection(connection):
     connection.shutdown()
     connection.close()
 
-
 def binary_message_to_string(message):
     """Reconverte a mensagem recebida de binário para string."""
     message = str(message, ENCODING)
     return message.split('\0', maxsplit=1)[0]
 
-
 def message_to_binary(message):
     """Converte a mensagem para binário.
+    
     Caso a mensagem seja muito grande, trunca a mensagem para NUM_BYTES bytes.
     caso seja muito pequena, insere '\0' no fim da mensagem até seu tamanho
     ser igual a NUM_BYTES.
@@ -186,21 +185,21 @@ if __name__ == "__main__":
     try:
         # cria um socket servidor na porta passada como argumento do programa
         # com o máximo de 127 conexões pendentes
-        PORT_NUM = argv[1]
+        PORT_NUM = int(argv[1])
         server_socket = socket(AF_INET, SOCK_STREAM)
-        server_socket.bind((gethostbyname(gethostname()), int(PORT_NUM)))
+        server_socket.bind((gethostbyname(gethostname()), PORT_NUM))
         server_socket.listen(127)
         while True:
-            if socket_available():
+            if socket_available(server_socket):
                 connection, address = server_socket.accept()
-                users_connected.append([connection, ''])
+                users_connected.append([connection, '']) 
+
                 thread_user = threading.Thread(
                     target=thread_client, args=(connection, address))
                 thread_user.daemon = True
                 thread_user.start()
-                # TODO: cria e inicia thread desse cliente que acabou de conectar
-                # thread_client.daemon = True
 
     except KeyboardInterrupt:  # captura o CTRL+C
+        print("Encerrando o servidor e desconectando todos os usuários.")
         close_all_connections()
         quit()
