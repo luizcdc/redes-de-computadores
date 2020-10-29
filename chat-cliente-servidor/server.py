@@ -19,6 +19,12 @@ def socket_available():
     available = select([server_socket], [], [], 0.25)[0]
     return True if available else False
 
+def close_all_connections():
+    global users_connected
+    for c in users_connected:
+        c.shutdown()
+        c.close()
+    users_connected = []
 
 def remove_connection(connection):
     """Remove uma conexão da lista users_connected e a encerra."""
@@ -27,7 +33,6 @@ def remove_connection(connection):
     users_connected = [x for x in users_connected if x[0] != connection]
     connection.shutdown()
     connection.close()
-    return
 
 
 def binary_message_to_string(message):
@@ -197,5 +202,5 @@ if __name__ == "__main__":
                 # thread_client.daemon = True
 
     except KeyboardInterrupt:  # captura o CTRL+C
-        # TODO: fechar todas as conexões
+        close_all_connections()
         quit()
