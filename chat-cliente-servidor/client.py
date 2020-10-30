@@ -27,12 +27,14 @@ def client():
             # conectando ao server
             dest = (HOST, PORT)
             socket_connection.connect(dest)
-            socket_connection.sendall(message_to_binary(USERNAME))
-            print("Conectado com sucesso!")
+            if (socket_connection.sendall(message_to_binary(USERNAME)) == None):
+                print("Conectado com sucesso!")
             thread_send = threading.Thread(target=send_msg, args=())
             thread_send.daemon = True
             thread_send.start()
             while True:
+                # loop que executa na thread principal cuja função é receber e
+                # imprimir as mensagens transmitidas pelo servidor.
                 msg_recebida = binary_message_to_string(socket_connection.recv(NUM_BYTES))
                 if(msg_recebida):
                     print(msg_recebida)
@@ -43,16 +45,16 @@ def client():
             print('Desconectando.')
             return
         except (ConnectionError, socket.error) as erro:
-            print('ERRO: ', erro)
+            print('ERRO:', erro)
             return
         except Exception as erro:
-            print('ERROR: Erro não identificado ', erro)
+            print('ERROR: Erro não identificado', erro)
             return
         finally:
             # esse bloco que encerra a conexão sempre é executado 
             # independentemente do que está no "try" ou em qualquer "except",
             # até mesmo caso a função dê "return"
-            socket_connection.shutdown()
+            socket_connection.shutdown(socket.SHUT_RDWR)
             socket_connection.close()
     else:
         print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')

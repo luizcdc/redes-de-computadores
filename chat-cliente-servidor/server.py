@@ -1,37 +1,44 @@
 import threading
-from socket import AF_INET, SOCK_STREAM, socket, gethostbyname, gethostname
+from socket import AF_INET, SOCK_STREAM, socket, gethostbyname, gethostname, SHUT_RDWR
 from threading import Thread
 from select import select
-from sys import argv
+from sys import argv, exit
 from datetime import datetime
 
 ENCODING = 'utf-8'
 NUM_BYTES = 2000
 users_connected = []
+server_socket = socket(AF_INET, SOCK_STREAM)
 
 # definir as funções que executam cada comando suportado pelo servidor
 
+def time_string():
+    return datetime.now().strftime("%H:%M: ")
 
 def socket_available(socket_):
     """Retorna se um socket específico tem dados pendentes para leitura
     ou conexões pendentes para serem aceitas.
     """
-    available = select([socket], [], [], 0.25)[0]
+    available = select([socket_], [], [], 0.25)[0]
     return True if available else False
 
 def close_all_connections():
-    global users_connected
+    global users_connected, server_socket
     for c in users_connected:
-        c.shutdown()
-        c.close()
+        try:
+            c[0].shutdown(SHUT_RDWR)
+        except OSError:
+            pass
+        c[0].close()
     users_connected = []
-
+    server_socket.shutdown(SHUT_RDWR)
+    server_socket.close()
 def remove_connection(connection):
     """Remove uma conexão da lista users_connected e a encerra."""
     global users_connected
 
     users_connected = [x for x in users_connected if x[0] != connection]
-    connection.shutdown()
+    connection.shutdown(SHUT_RDWR)
     connection.close()
 
 def binary_message_to_string(message):
@@ -78,7 +85,7 @@ def send(connection, nickname, message):
     else:
         executed = "Não"
 
-    messageserver = (datetime.now().strftime("%H:%M: ") +
+    messageserver = (time_string() +
                      nickname + " SEND Executado: " + executed)
     print(messageserver)
 
@@ -106,12 +113,12 @@ def send_to(connection, sender_nickname, message):
             except Exception:
                 executed = "Não"
 
-            messageserver = (datetime.now().strftime("%H:%M: ") +
+            messageserver = (time_string() +
             sender_nickname + " SENDTO Executado: " + executed)
             print(messageserver)
         else:
             executed = "Não"
-            messageserver = (datetime.now().strftime("%H:%M: ") +
+            messageserver = (time_string() +
             sender_nickname + " SENDTO Executado: " + executed)
             print(messageserver)
             erro(connection, "Usuário '+dest_nick+' não está conectado no sistema.")
@@ -147,10 +154,10 @@ def thread_client(connection, address):
     if (nickname in (c[1] for c in users_connected)) or (' ' in nickname):
         # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
         # da lista users_connected e retorna
-        print("ERRO: falha na conexão com o cliente, o nome de usuário "
-              "já está em uso.")
-        connection.sendall(message_to_binary(f"O usuário {nickname} já está"
-                                             "registrado no servidor.")
+        print(f"ERRO: falha na conexão com o cliente em {address}, o nome " +
+              f"de usuário {nickname} já está em uso.")
+        connection.sendall(message_to_binary(f"ERRO: O usuário {nickname} já " +
+                                             "está registrado no servidor."))
         remove_connection(connection)
         return
     else:
@@ -178,7 +185,7 @@ def thread_client(connection, address):
         except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection, tipo="mensagem vazia")
-            print(f"{datetime.now().strftime("%H:%M: ")} {nickname} desconectado.")
+            print(f"{time_string()} {nickname} desconectado.")
             return
 
 if __name__ == "__main__":
@@ -186,7 +193,6 @@ if __name__ == "__main__":
         # cria um socket servidor na porta passada como argumento do programa
         # com o máximo de 127 conexões pendentes
         PORT_NUM = int(argv[1])
-        server_socket = socket(AF_INET, SOCK_STREAM)
         server_socket.bind((gethostbyname(gethostname()), PORT_NUM))
         server_socket.listen(127)
         while True:
@@ -202,4 +208,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:  # captura o CTRL+C
         print("Encerrando o servidor e desconectando todos os usuários.")
         close_all_connections()
-        quit()
+        exit()
