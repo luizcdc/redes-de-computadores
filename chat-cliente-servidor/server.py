@@ -34,8 +34,11 @@ def close_all_connections():
             pass
         c[0].close()
     users_connected = []
-    server_socket.shutdown(SHUT_RDWR)
-    server_socket.close()
+    try:
+        server_socket.shutdown(SHUT_RDWR)
+        server_socket.close()
+    except OSError:
+        pass
 
 def remove_connection(connection):
     """Remove uma conexão da lista users_connected e a encerra."""
