@@ -66,7 +66,7 @@ def client():
                 pass
 
     else:
-        print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
+        print('Uso: python3 client_chat.py <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
 
 
 if __name__ == "__main__":
