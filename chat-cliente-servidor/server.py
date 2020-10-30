@@ -208,8 +208,11 @@ if __name__ == "__main__":
         # cria um socket servidor na porta passada como argumento do programa
         # com o máximo de 127 conexões pendentes
         PORT_NUM = int(argv[1])
-        server_socket.bind((gethostbyname(gethostname()), PORT_NUM))
+        HOST_IP = gethostbyname(gethostname())
+        server_socket.bind((HOST_IP, PORT_NUM))
         server_socket.listen(127)
+        print(f"Servidor inicializado e disponível em {HOST_IP}:{PORT_NUM}\n" +
+               "Aguardando novas conexões.")
         while True:
             if socket_available(server_socket):
                 connection, address = server_socket.accept()
