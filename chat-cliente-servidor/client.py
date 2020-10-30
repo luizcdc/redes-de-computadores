@@ -18,7 +18,7 @@ def send_msg():
                           "enviada.")
                 socket_connection.sendall(message_to_binary(msg))
             msg = input()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt,OSError):
         # a outra thread já fecha as conexões
         sys.exit()
 def client():

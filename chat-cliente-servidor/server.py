@@ -205,7 +205,7 @@ def thread_client(connection, address):
             else:
                 erro(connection, received+" não é um comando válido.")
 
-        except (IndexError, AttributeError, ValueError):
+        except (IndexError, AttributeError, ValueError, OSError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection, tipo="mensagem vazia")
             remove_connection(connection)
