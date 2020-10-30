@@ -93,6 +93,7 @@ def send(connection, nickname, message):
                 except Exception:
                     executed = "Não"
     else:
+        erro(connection)
         executed = "Não"
         # TODO: CHAMAR erro() PARA SINALIZAR QUE SEND NÃO RECEBEU COMO
         # ARGUMENTO A MENSAGEM
