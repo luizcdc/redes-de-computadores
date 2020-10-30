@@ -56,7 +56,7 @@ def binary_message_to_string(message):
 def message_to_binary(message):
     """Converte a mensagem para binário.
     
-    Caso a mensagem seja muito grande, trunca a mensagem para NUM_BYTES bytes.
+    Caso a mensagem seja muito grande, encurta a mensagem para NUM_BYTES bytes.
     caso seja muito pequena, insere '\0' no fim da mensagem até seu tamanho
     ser igual a NUM_BYTES.
     """
@@ -139,7 +139,7 @@ def commands_help(connection):
                     "WHO -> exibir uma lista dos usuários conectados.\n"
                     "SEND <MESSAGE> -> enviar uma mensagem para todos os usuários.\n"
                     "SENDTO <CLIENT_NAME> <MESSAGE> -> enviar uma mensagem para somente um usuário.\n\n"
-                    "Mensagens com mais de" + str(NUM_BYTES) + " bytes serão truncadas para esse comprimento máximo.\n"
+                    "Mensagens com mais de" + str(NUM_BYTES) + " bytes serão encurtadas para esse comprimento máximo.\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
     connection.sendall(message_to_binary(help_message))

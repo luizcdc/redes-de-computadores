@@ -12,6 +12,10 @@ def send_msg():
         msg = input()
         while True:
             if msg:
+                if len(bytes(msg,ENCODING)) > NUM_BYTES:
+                    print("A mensagem é muito grande e será encurtada "
+                          "para " + str(NUM_BYTES) + " bytes antes de ser " +
+                          "enviada.")
                 socket_connection.sendall(message_to_binary(msg))
             msg = input()
     except KeyboardInterrupt:
