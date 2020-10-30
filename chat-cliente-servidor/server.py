@@ -19,7 +19,7 @@ def socket_available(socket_):
     """Retorna se um socket específico tem dados pendentes para leitura
     ou conexões pendentes para serem aceitas.
     """
-    available = select([socket_], [], [], 0.25)[0]
+    available = select([socket_], [], [], 0.5)[0]
     return True if available else False
 
 def close_all_connections():
@@ -169,6 +169,10 @@ def thread_client(connection, address):
         print(datetime.now().strftime("%H:%M+\t"+nickname+"\tConectado"))
     while True:
         try:
+            while not socket_available(connection):
+                # evita que a thread bloqueie tentando receber do socket,
+                # o que permite que se feche a conexão sem causar uma exceção 
+                pass
             received = binary_message_to_string(connection.recv(NUM_BYTES))
             command = str(received.split(maxsplit=1)[0])
             if command == "SEND":
