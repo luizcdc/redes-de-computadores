@@ -7,6 +7,7 @@ from sys import argv, exit
 from datetime import datetime
 
 ENCODING = 'utf-8'
+quitting_program = False
 NUM_BYTES = 2000
 users_connected = []
 server_socket = socket(AF_INET, SOCK_STREAM)
@@ -44,7 +45,7 @@ def remove_connection(connection):
     try:
         connection.shutdown(SHUT_RDWR)
         connection.close()
-    except OSError:
+    except Exception:
         # caso a conexão já esteja inválida/fechada
         pass
 
@@ -164,7 +165,10 @@ def who(connection, sender_nickname):
 
 
 def erro(connection='', message='Um erro desconhecido ocorreu.', tipo="undisclosed"):
-    connection.send(message_to_binary(message))
+    try:
+        connection.sendall(message_to_binary(message))
+    except Exception:
+        pass
 
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
@@ -205,11 +209,11 @@ def thread_client(connection, address):
             else:
                 erro(connection, received+" não é um comando válido.")
 
-        except (IndexError, AttributeError, ValueError, OSError):
+        except (IndexError, AttributeError, ValueError, OSError, ConnectionError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
-            erro(connection, tipo="mensagem vazia")
             remove_connection(connection)
-            print(f"{time_string()}\t{nickname}\tDesconectado.")
+            if not quitting_program:
+                print(f"{time_string()}\t{nickname}\tDesconectado.")
             return
 
 if __name__ == "__main__":
@@ -237,5 +241,6 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:  # captura o CTRL+C
             print("Encerrando o servidor e desconectando todos os usuários.")
+            quitting_program = True
             close_all_connections()
             exit()
