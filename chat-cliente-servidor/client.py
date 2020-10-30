@@ -11,9 +11,9 @@ def send_msg():
     try:
         msg = input()
         while True:
-            socket_connection.sendall(message_to_binary(msg))
+            if msg:
+                socket_connection.sendall(message_to_binary(msg))
             msg = input()
-            if(msg == 'fim'): break
     except KeyboardInterrupt:
         # TODO: fechar todas as conexões
         sys.exit()

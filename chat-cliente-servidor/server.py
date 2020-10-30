@@ -200,7 +200,7 @@ def thread_client(connection, address):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection, tipo="mensagem vazia")
             remove_connection(connection)
-            print(f"{time_string()}\t{nickname}\tdesconectado.")
+            print(f"{time_string()}\t{nickname}\tDesconectado.")
             return
 
 if __name__ == "__main__":
