@@ -16,7 +16,7 @@ server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 # definir as funções que executam cada comando suportado pelo servidor
 
 def time_string():
-    return datetime.now().strftime("%H:%M:")
+    return datetime.now().strftime("%H:%M")
 
 def socket_available(socket_):
     """Retorna se um socket específico tem dados pendentes para leitura
