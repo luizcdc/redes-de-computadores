@@ -18,6 +18,7 @@ def send_msg():
         # TODO: fechar todas as conexões
         sys.exit()
 def client():
+    global socket_connection
     if (len(sys.argv) == 4):
         USERNAME = sys.argv[1]
         HOST = sys.argv[2]
@@ -39,15 +40,20 @@ def client():
                     raise ConnectionError('O servidor desconectou.')
 
         except KeyboardInterrupt:
-            # TODO: fechar todas as conexões
-            print('Desconectando')
-            sys.exit()    
+            print('Desconectando.')
+            return
         except (ConnectionError, socket.error) as erro:
-            print('ERRO:', erro)
-            socket_connection.close()
+            print('ERRO: ', erro)
+            return
         except Exception as erro:
-            print('ERROR: Erro não identificado', erro)
-            sys.exit()
+            print('ERROR: Erro não identificado ', erro)
+            return
+        finally:
+            # esse bloco que encerra a conexão sempre é executado 
+            # independentemente do que está no "try" ou em qualquer "except",
+            # até mesmo caso a função dê "return"
+            socket_connection.shutdown()
+            socket_connection.close()
     else:
         print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
 
