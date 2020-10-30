@@ -49,7 +49,7 @@ def client():
             print('Desconectando.')
             return
         except (ConnectionError, socket.error) as erro:
-            print('ERRO:', erro)
+            print('ERRO: O servidor desconectou.')
             return
         except Exception as erro:
             print('ERROR: Erro não identificado', erro)
