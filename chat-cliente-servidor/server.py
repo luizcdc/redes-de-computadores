@@ -62,7 +62,6 @@ def message_to_binary(message):
     """
     size_message = len(bytes(message, ENCODING))
     if size_message > NUM_BYTES:
-        # TODO : CHAMAR erro() para sinalizar que a mensagem é muito grande
         message = message[:NUM_BYTES]
         size_message = len(bytes(message, ENCODING))
         while (size_message > 2000):
@@ -130,8 +129,6 @@ def send_to(connection, sender_nickname, message):
             print(messageserver)
             erro(connection, f"Usuário {dest_nick} não está conectado ao servidor.")
             # connection.send(message_to_binary('Usuário ' + dest_nick + ' não está conectado no sistema.'))
-            # TODO: chamar erro() para sinalizar que o usuário especificado
-            # não está conectado ao servidor
 
 def commands_help(connection):
     help_message = ("COMANDOS SUPORTADOS:\n"

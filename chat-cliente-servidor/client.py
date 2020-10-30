@@ -19,7 +19,7 @@ def send_msg():
                 socket_connection.sendall(message_to_binary(msg))
             msg = input()
     except KeyboardInterrupt:
-        # TODO: fechar todas as conexões
+        # a outra thread já fecha as conexões
         sys.exit()
 def client():
     global socket_connection
