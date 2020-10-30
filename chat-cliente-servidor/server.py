@@ -136,7 +136,7 @@ def commands_help(connection, sender_nickname):
                     "WHO -> exibir uma lista dos usuários conectados.\n"
                     "SEND <MESSAGE> -> enviar uma mensagem para todos os usuários.\n"
                     "SENDTO <CLIENT_NAME> <MESSAGE> -> enviar uma mensagem para somente um usuário.\n\n"
-                    "Mensagens com mais de" + str(NUM_BYTES) + " bytes serão encurtadas para esse comprimento máximo.\n"
+                    "Mensagens com mais de " + str(NUM_BYTES) + " bytes serão encurtadas para esse comprimento máximo.\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
     try:
