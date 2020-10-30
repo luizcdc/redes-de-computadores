@@ -1,5 +1,6 @@
 import threading
-from socket import AF_INET, SOCK_STREAM, socket, gethostbyname, gethostname, SHUT_RDWR
+from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, SHUT_RDWR
+from socket import socket, gethostbyname, gethostname
 from threading import Thread
 from select import select
 from sys import argv, exit
@@ -9,6 +10,7 @@ ENCODING = 'utf-8'
 NUM_BYTES = 2000
 users_connected = []
 server_socket = socket(AF_INET, SOCK_STREAM)
+server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
 # definir as funções que executam cada comando suportado pelo servidor
 
@@ -33,13 +35,18 @@ def close_all_connections():
     users_connected = []
     server_socket.shutdown(SHUT_RDWR)
     server_socket.close()
+
 def remove_connection(connection):
     """Remove uma conexão da lista users_connected e a encerra."""
     global users_connected
 
     users_connected = [x for x in users_connected if x[0] != connection]
-    connection.shutdown(SHUT_RDWR)
-    connection.close()
+    try:
+        connection.shutdown(SHUT_RDWR)
+        connection.close()
+    except OSError:
+        # caso a conexão já esteja inválida/fechada
+        pass
 
 def binary_message_to_string(message):
     """Reconverte a mensagem recebida de binário para string."""
@@ -189,6 +196,7 @@ def thread_client(connection, address):
         except (IndexError, AttributeError, ValueError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             erro(connection, tipo="mensagem vazia")
+            remove_connection(connection)
             print(f"{time_string()} {nickname} desconectado.")
             return
 

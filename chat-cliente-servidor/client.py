@@ -54,8 +54,13 @@ def client():
             # esse bloco que encerra a conexão sempre é executado 
             # independentemente do que está no "try" ou em qualquer "except",
             # até mesmo caso a função dê "return"
-            socket_connection.shutdown(socket.SHUT_RDWR)
-            socket_connection.close()
+            try:
+                socket_connection.shutdown(socket.SHUT_RDWR)
+                socket_connection.close()
+            except OSError:
+                # caso a conexão já esteja fechada/inválida
+                pass
+
     else:
         print('Uso: client <CLIENT_NAME> <SERVER_ADDRESS> <SERVER_PORT>')
 
