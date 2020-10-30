@@ -90,6 +90,8 @@ def send(connection, nickname, message):
                     executed = "Não"
     else:
         executed = "Não"
+        # TODO: CHAMAR erro() PARA SINALIZAR QUE SEND NÃO RECEBEU COMO
+        # ARGUMENTO A MENSAGEM
 
     messageserver = (time_string() + '\t' +
                      nickname + "\tSEND\tExecutado:\t" + executed)
@@ -100,7 +102,8 @@ def send_to(connection, sender_nickname, message):
     global users_connected
     message = message.split(maxsplit=2)
     if len(message) != 3:
-        erro()
+        erro(connection)
+        executed = "Não"
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
@@ -118,19 +121,15 @@ def send_to(connection, sender_nickname, message):
                     f"{sender_nickname}:" + message[2]))
             except Exception:
                 executed = "Não"
-
-            messageserver = (time_string() + '\t' +
-            sender_nickname + "\tSENDTO\tExecutado:\t" + executed)
-            print(messageserver)
         else:
             executed = "Não"
-            messageserver = (time_string() + '\t' +
-            sender_nickname + "\tSENDTO\tExecutado:\t" + executed)
-            print(messageserver)
             erro(connection, f"Usuário {dest_nick} não está conectado ao servidor.")
-            # connection.send(message_to_binary('Usuário ' + dest_nick + ' não está conectado no sistema.'))
+            # TODO: chamar erro() para sinalizar para o usuario que sendto falhou
+    messageserver = (time_string() + '\t' +
+    sender_nickname + "\tSENDTO\tExecutado:\t" + executed)
+    print(messageserver)
 
-def commands_help(connection):
+def commands_help(connection, sender_nickname):
     help_message = ("COMANDOS SUPORTADOS:\n"
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
@@ -139,19 +138,32 @@ def commands_help(connection):
                     "Mensagens com mais de" + str(NUM_BYTES) + " bytes serão encurtadas para esse comprimento máximo.\n"
                     "Pressione CTRL+C a qualquer momento para encerrar a "
                     "conexão com o servidor e fechar o cliente de chat.\n")
-    connection.sendall(message_to_binary(help_message))
+    try:
+       connection.sendall(message_to_binary(help_message))
+       executed = "Sim"
+    except Exception:
+        executed = "Não"
+    messageserver = (time_string() + '\t' +
+                        sender_nickname + "\tHELP\tExecutado:\t" + executed)
+    print(messageserver)
 
-
-def who(connection):
+def who(connection, sender_nickname):
     global users_connected
     who_message = "USUARIOS CONECTADOS:"
     for c in users_connected:
         who_message += '\n' + c[1]
     who_message += '\n'
-    connection.sendall(message_to_binary(who_message))
+    try:
+        connection.sendall(message_to_binary(who_message))
+        executed = "Sim"
+    except Exception:
+        executed = "Não"
+    messageserver = (time_string() + '\t' +
+                     sender_nickname + "\tWHO\tExecutado:\t" + executed)
+    print(messageserver)
 
 
-def erro(connection='', message='', tipo="undisclosed"):
+def erro(connection='', message='Um erro desconhecido ocorreu.', tipo="undisclosed"):
     connection.send(message_to_binary(message))
 
 def thread_client(connection, address):
@@ -187,9 +199,9 @@ def thread_client(connection, address):
             elif command == "SENDTO":
                 send_to(connection, nickname, received)
             elif received == "HELP":
-                commands_help(connection)
+                commands_help(connection, nickname)
             elif command == "WHO":
-                who(connection)
+                who(connection, nickname)
             else:
                 erro(connection, received+" não é um comando válido.")
 
