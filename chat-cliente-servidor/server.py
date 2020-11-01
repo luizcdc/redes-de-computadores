@@ -48,7 +48,7 @@ def remove_connection(connection):
     try:
         connection.shutdown(SHUT_RDWR)
         connection.close()
-    except Exception:
+    except OSError:
         # caso a conexão já esteja inválida/fechada
         pass
 
@@ -90,7 +90,7 @@ def send(connection, nickname, message):
                 try:
                     user[0].sendall(message_to_binary(
                         f"{nickname}: {message}"))
-                except Exception:
+                except OSError:
                     executed = "Não"
     else:
         erro(connection)
@@ -124,7 +124,7 @@ def send_to(connection, sender_nickname, message):
             try:
                 dest_socket[0][0].sendall(message_to_binary(
                     f"{sender_nickname}:" + message[2]))
-            except Exception:
+            except OSError:
                 executed = "Não"
         else:
             executed = "Não"
@@ -146,7 +146,7 @@ def commands_help(connection, sender_nickname):
     try:
        connection.sendall(message_to_binary(help_message))
        executed = "Sim"
-    except Exception:
+    except OSError:
         executed = "Não"
     messageserver = (time_string() + '\t' +
                         sender_nickname + "\tHELP\tExecutado:\t" + executed)
@@ -161,7 +161,7 @@ def who(connection, sender_nickname):
     try:
         connection.sendall(message_to_binary(who_message))
         executed = "Sim"
-    except Exception:
+    except OSError:
         executed = "Não"
     messageserver = (time_string() + '\t' +
                      sender_nickname + "\tWHO\tExecutado:\t" + executed)
@@ -171,7 +171,7 @@ def who(connection, sender_nickname):
 def erro(connection='', message='Um erro desconhecido ocorreu.', tipo="undisclosed"):
     try:
         connection.sendall(message_to_binary(message))
-    except Exception:
+    except OSError:
         pass
 
 def thread_client(connection, address):

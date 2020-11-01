@@ -25,6 +25,7 @@ def send_msg():
     except (KeyboardInterrupt,OSError):
         # a outra thread já fecha as conexões
         sys.exit()
+
 def client():
     global socket_connection
     if (len(sys.argv) == 4):
@@ -52,11 +53,11 @@ def client():
         except KeyboardInterrupt:
             print('Desconectando.')
             return
-        except (ConnectionError, socket.error) as erro:
+        except (ConnectionError, OSError) as erro:
             print('ERRO: O servidor desconectou.')
             return
         except Exception as erro:
-            print('ERROR: Erro não identificado', erro)
+            print(f'ERRO: Erro não identificado {type(erro).__name__} -> {erro}.')
             return
         finally:
             # esse bloco que encerra a conexão sempre é executado 
