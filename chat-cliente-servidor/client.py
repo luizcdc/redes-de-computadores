@@ -42,10 +42,14 @@ def client():
         USERNAME = sys.argv[1]
         HOST = sys.argv[2]
         PORT = int(sys.argv[3])
-        try:
             # conectando ao server
-            dest = (HOST, PORT)
+        dest = (HOST, PORT)
+        try:
             socket_connection.connect(dest)
+        except ConnectionError:
+            print("ERRO: não foi possível conectar ao servidor.")
+            return
+        try:
             socket_connection.sendall(message_to_binary(USERNAME))
             thread_send = threading.Thread(target=send_msg, args=())
             thread_send.daemon = True
