@@ -156,10 +156,10 @@ def send_to(connection, sender_username, message):
                     f"{sender_username}: " + message[2]))
             except OSError:
                 executed = "Não"
-                erro(connection=connection,tipo="SENDTO_BROKEN_CONNECTION",dest_user=sender_username)
+                erro(connection=connection,tipo="SENDTO_BROKEN_CONNECTION",dest_user=dest_user)
         else:
             executed = "Não"
-            erro(connection=connection,tipo="SENDTO_INVALID_DEST",dest_user=sender_username)
+            erro(connection=connection,tipo="SENDTO_INVALID_DEST",dest_user=dest_user)
     messageserver = (time_string() + "\t" +
                      sender_username + "\tSENDTO\tExecutado: " + executed)
     print(messageserver)
@@ -272,8 +272,6 @@ def thread_client(connection, address):
         if (username in (c[1] for c in users_connected)) or (" " in username):
             # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
             # da lista users_connected e retorna
-            print(f"ERRO: falha na conexão com o cliente em {address}, o nome " +
-                f"de usuário {username} já está em uso.")
             erro(connection=connection,tipo="USERNAME_ALREADY_USED",username=username,address=address)
             return
         else:

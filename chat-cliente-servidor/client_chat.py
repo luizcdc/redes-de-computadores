@@ -1,7 +1,7 @@
 import socket
 import threading
 import sys
-from server import binary_message_to_string, message_to_binary, NUM_BYTES, ENCODING
+from server_chat import binary_message_to_string, message_to_binary, NUM_BYTES, ENCODING
 
 # AF_INET == ipv4 ------- SOCK_STREAM == TCP
 try:
