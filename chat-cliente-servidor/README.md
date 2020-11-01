@@ -28,7 +28,10 @@
 
 1. python3 server.py <**PORT**>
 
-- Onde o parâmetro **PORT** é a porta na qual será conectado.
+- Onde o parâmetro **PORT** é a porta na qual será conectado
+- Opcional: para testar o servidor localmente com o endereço de IP de loopback 
+(127.0.0.1), basta que o número de argumentos seja maior que um, desde que o 
+primeiro argumento seja ainda a porta de rede a ser utilizada.
 
 ### Cliente
 

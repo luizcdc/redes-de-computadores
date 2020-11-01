@@ -228,7 +228,7 @@ if __name__ == "__main__":
             # cria um socket servidor na porta passada como argumento do programa
             # com o máximo de 127 conexões pendentes
             PORT_NUM = int(argv[1])
-            HOST_IP = gethostbyname(gethostname())
+            HOST_IP = (gethostbyname(gethostname()) if len(argv) == 2 else '127.0.0.1')
             server_socket.bind((HOST_IP, PORT_NUM))
             server_socket.listen(127)
             print(f"Servidor inicializado e disponível em {HOST_IP}:{PORT_NUM}\n" +
