@@ -22,9 +22,19 @@ def send_msg():
                           "enviada.")
                 socket_connection.sendall(message_to_binary(msg))
             msg = input()
-    except (KeyboardInterrupt,OSError):
+    except (KeyboardInterrupt,OSError,EOFError):
         # a outra thread já fecha as conexões
-        sys.exit()
+        exit()
+    finally:
+        # esse bloco que encerra a conexão sempre é executado
+        # independentemente do que está no "try" ou em qualquer "except",
+        # até mesmo caso a função dê "return"
+        try:
+            socket_connection.shutdown(socket.SHUT_RDWR)
+            socket_connection.close()
+        except OSError:
+            # caso a conexão já esteja fechada/inválida
+            pass
 
 def client():
     global socket_connection
@@ -60,7 +70,7 @@ def client():
             print(f'ERRO: Erro não identificado {type(erro).__name__} -> {erro}.')
             return
         finally:
-            # esse bloco que encerra a conexão sempre é executado 
+            # esse bloco que encerra a conexão sempre é executado
             # independentemente do que está no "try" ou em qualquer "except",
             # até mesmo caso a função dê "return"
             try:
