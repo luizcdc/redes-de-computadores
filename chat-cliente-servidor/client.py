@@ -36,8 +36,7 @@ def client():
             # conectando ao server
             dest = (HOST, PORT)
             socket_connection.connect(dest)
-            if (socket_connection.sendall(message_to_binary(USERNAME)) == None):
-                print("Conectado com sucesso!")
+            socket_connection.sendall(message_to_binary(USERNAME))
             thread_send = threading.Thread(target=send_msg, args=())
             thread_send.daemon = True
             thread_send.start()

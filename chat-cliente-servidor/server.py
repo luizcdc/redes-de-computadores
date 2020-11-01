@@ -110,9 +110,9 @@ def send(connection, username, message):
                 except OSError:
                     executed = "Não"
     else:
-        erro(connection)
+        erro(connection, f"ERRO: SEND requer uma mensagem como argumento")
         executed = "Não"
-        # TODO: CHAMAR erro() PARA SINALIZAR QUE SEND NÃO RECEBEU COMO
+        # CHAMA erro() PARA SINALIZAR QUE SEND NÃO RECEBEU COMO
         # ARGUMENTO A MENSAGEM
 
     messageserver = (time_string() + "\t" +
@@ -130,9 +130,9 @@ def send_to(connection, sender_username, message):
     global users_connected
     message = message.split(maxsplit=2)
     if len(message) != 3:
-        erro(connection)
+        erro(connection, f"ERRO: SENDTO requer um usuário alvo e uma mensagem como argumentos")
         executed = "Não"
-        # TODO: chamar erro() para sinalizar que o comando não recebeu os
+        # chama erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
         # filter retorna uma lista com a entrada [socket, username] do usuário
@@ -222,6 +222,7 @@ def thread_client(connection, address):
             if x[0] == connection:
                 x[1] = username
                 break
+        connection.sendall(message_to_binary(f"Conectado com Sucesso"))
         print(time_string() + "\t" +username+"\tConectado")
     while True:
         try:
