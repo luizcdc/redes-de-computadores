@@ -4,7 +4,11 @@ import sys
 from server import binary_message_to_string, message_to_binary, NUM_BYTES, ENCODING
 
 # AF_INET == ipv4 ------- SOCK_STREAM == TCP
-socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+except socket.error as erro:
+    print ("ERRO: Não foi possível criar o socket.")
+    sys.exit()
 
 def send_msg():
     global socket_connection
