@@ -8,7 +8,7 @@ from datetime import datetime
 
 ENCODING = "utf-8"
 quitting_program = False
-NUM_BYTES = 2000
+NUM_BYTES = 1999
 users_connected = []
 server_socket = socket(AF_INET, SOCK_STREAM)
 server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -29,8 +29,8 @@ def socket_available(socket_):
     return True if available else False
 
 def close_all_connections():
-    """Encerra todas as conexões, inclusive o socket servidor.
-    """
+    """Encerra todas as conexões, inclusive o socket servidor."""
+    
     global users_connected, server_socket
     for c in users_connected:
         try:
@@ -76,7 +76,7 @@ def message_to_binary(message):
     if size_message > NUM_BYTES:
         message = message[:NUM_BYTES]
         size_message = len(bytes(message, ENCODING))
-        while (size_message > 2000):
+        while (size_message > NUM_BYTES):
             # necessário pois alguns caracteres utf-8 têm mais que 1 byte.
             message = message[:-1]
             size_message = len(bytes(message, ENCODING))
@@ -116,7 +116,7 @@ def send(connection, username, message):
         # ARGUMENTO A MENSAGEM
 
     messageserver = (time_string() + "\t" +
-                     username + "\tSEND\tExecutado:" + executed)
+                     username + "\tSEND\tExecutado: " + executed)
     print(messageserver)
 
 
@@ -154,7 +154,7 @@ def send_to(connection, sender_username, message):
             erro(connection, f"Usuário {dest_user} não está conectado ao servidor.")
             # TODO: chamar erro() para sinalizar para o usuario que sendto falhou
     messageserver = (time_string() + "\t" +
-    sender_username + "\tSENDTO\tExecutado:" + executed)
+    sender_username + "\tSENDTO\tExecutado: " + executed)
     print(messageserver)
 
 def commands_help(connection, sender_username):
@@ -174,7 +174,7 @@ def commands_help(connection, sender_username):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + "\t" +
-                        sender_username + "\tHELP\tExecutado:" + executed)
+                        sender_username + "\tHELP\tExecutado: " + executed)
     print(messageserver)
 
 def who(connection, sender_username):
@@ -191,17 +191,64 @@ def who(connection, sender_username):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + "\t" +
-                     sender_username + "\tWHO\tExecutado:" + executed)
+                     sender_username + "\tWHO\tExecutado: " + executed)
     print(messageserver)
 
 
-def erro(connection="", message="Um erro desconhecido ocorreu.", tipo="undisclosed"):
+def erro(connection=None, username = "", message="", tipo="undisclosed", **kwargs):
     """Função responsável pelo tratamento de erros."""
-    try:
-        connection.sendall(message_to_binary(message))
-    except OSError:
-        pass
-
+    if tipo == "INVALID_COMMAND":
+        print(f"ERRO: usuário {username} tentou executar um comando inválido.")
+        try:
+            connection.sendall(message_to_binary(
+                f"ERRO: {kwargs['command']} não é um comando válido."))
+        except OSError:
+            pass
+    elif tipo == "EMPTY_SEND":
+        try:
+            connection.sendall(message_to_binary(
+                f"ERRO: SEND requer uma mensagem como argumento."))
+        except OSError:
+            pass
+    elif tipo == "SEND_FAILURE":
+        err_msg = "ERRO: SEND não conseguiu enviar a mensagem para nenhum outro usuário conectado."
+        print(err_msg)
+        try:
+            connection.sendall(message_to_binary(err_msg))
+        except OSError:
+            pass
+    elif tipo == "SENDTO_INVALID_ARGS":
+        try:
+            connection.sendall(message_to_binary(
+                f"ERRO: SENDTO requer um usuário alvo e uma mensagem como argumentos"))
+        except OSError:
+            pass
+    elif tipo == "SENDTO_INVALID_DEST":
+        try:
+            connection.sendall(message_to_binary(
+                f"ERRO: usuário {kwargs['dest_user']} não está conectado ao servidor."))
+        except OSError:
+            pass
+    elif tipo == "SENDTO_BROKEN_CONNECTION":
+        # TODO: eliminar a conexão quebrada
+        try:
+            connection.sendall(message_to_binary(
+                f"ERRO: a conexão com {kwargs['dest_user']} foi encerrada e a mensagem não foi entregue."))
+        except OSError:
+            pass
+    elif tipo == "RESPONSE_INTERRUPTED":
+        print("ERRO: ao tentar enviar a resposta do comando do usuário, a conexão foi perdida.")
+        remove_connection(connection)
+    elif tipo == "USERNAME_ALREADY_USED":
+        print(f"ERRO: falha no registro do cliente {kwargs['address']}, o " +
+              f"nome de usuário {username} já está em uso.")
+        connection.sendall(message_to_binary(f"ERRO: O usuário {username} já " +
+                                             "está registrado no servidor."))
+    elif tipo == "NO_ARGS":
+        print("Uso: python3 server_chat.py <PORT>")
+    else:
+        print("Um erro não especificado ocorreu.")
+        
 def thread_client(connection, address):
     """Handler para cada cliente, que é executado em uma thread própria para cada um."""
 
@@ -231,7 +278,7 @@ def thread_client(connection, address):
                 # o que permite que se feche a conexão sem causar uma exceção 
                 pass
             received = binary_message_to_string(connection.recv(NUM_BYTES))
-            command = str(received.split(maxsplit=1)[0])
+            command = received.split(maxsplit=1)[0]
             if command == "SEND":
                 send(connection, username, received)
             elif command == "SENDTO":
