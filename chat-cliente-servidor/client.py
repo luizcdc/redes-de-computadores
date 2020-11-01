@@ -84,5 +84,8 @@ def client():
 
 
 if __name__ == "__main__":
-    client()
+    if sys.version_info < (3,8):
+        print("Esse programa exige o python 3.8 ou mais recente para ser executado.")
+    else:
+        client()
     sys.exit()

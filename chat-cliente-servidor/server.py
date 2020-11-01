@@ -3,7 +3,7 @@ from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, SHUT_RDWR
 from socket import socket, gethostbyname, gethostname
 from threading import Thread
 from select import select
-from sys import argv, exit
+from sys import argv, exit, version_info
 from datetime import datetime
 
 ENCODING = "utf-8"
@@ -312,6 +312,8 @@ def thread_client(connection, address):
 if __name__ == "__main__":
     if len(argv) < 2:
         erro(tipo="NO_ARGS")
+    elif version_info < (3, 8):
+        print("Esse programa exige o python 3.8 ou mais recente para ser executado.")
     else:
         try:
             # cria um socket servidor na porta passada como argumento do programa
