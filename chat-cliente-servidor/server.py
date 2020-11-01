@@ -78,7 +78,7 @@ def message_to_binary(message):
     return bytes(message, ENCODING)
 
 
-def send(connection, nickname, message):
+def send(connection, username, message):
     global users_connected
 
     message = message.split(maxsplit=1)
@@ -89,7 +89,7 @@ def send(connection, nickname, message):
             if user[0] != connection:
                 try:
                     user[0].sendall(message_to_binary(
-                        f"{nickname}: {message}"))
+                        f"{username}: {message}"))
                 except OSError:
                     executed = "Não"
     else:
@@ -99,11 +99,11 @@ def send(connection, nickname, message):
         # ARGUMENTO A MENSAGEM
 
     messageserver = (time_string() + '\t' +
-                     nickname + "\tSEND\tExecutado:\t" + executed)
+                     username + "\tSEND\tExecutado:\t" + executed)
     print(messageserver)
 
 
-def send_to(connection, sender_nickname, message):
+def send_to(connection, sender_username, message):
     global users_connected
     message = message.split(maxsplit=2)
     if len(message) != 3:
@@ -112,29 +112,29 @@ def send_to(connection, sender_nickname, message):
         # TODO: chamar erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
-        # filter retorna uma lista com a entrada [socket, nickname] do usuário
+        # filter retorna uma lista com a entrada [socket, username] do usuário
         # destino em users_connected, ou uma lista vazia se não existir esse
         # usuário. Nesse último caso, envia mensagem de erro de volta para
         # o cliente.
-        dest_nick = message[1]
+        dest_user = message[1]
         executed = "Sim"
         dest_socket = list(
-            filter(lambda u: u[1] == dest_nick, users_connected))
+            filter(lambda u: u[1] == dest_user, users_connected))
         if dest_socket:
             try:
                 dest_socket[0][0].sendall(message_to_binary(
-                    f"{sender_nickname}:" + message[2]))
+                    f"{sender_username}:" + message[2]))
             except OSError:
                 executed = "Não"
         else:
             executed = "Não"
-            erro(connection, f"Usuário {dest_nick} não está conectado ao servidor.")
+            erro(connection, f"Usuário {dest_user} não está conectado ao servidor.")
             # TODO: chamar erro() para sinalizar para o usuario que sendto falhou
     messageserver = (time_string() + '\t' +
-    sender_nickname + "\tSENDTO\tExecutado:\t" + executed)
+    sender_username + "\tSENDTO\tExecutado:\t" + executed)
     print(messageserver)
 
-def commands_help(connection, sender_nickname):
+def commands_help(connection, sender_username):
     help_message = ("COMANDOS SUPORTADOS:\n"
                     "HELP -> listar os comandos suportados\n"
                     "WHO -> exibir uma lista dos usuários conectados.\n"
@@ -149,10 +149,10 @@ def commands_help(connection, sender_nickname):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + '\t' +
-                        sender_nickname + "\tHELP\tExecutado:\t" + executed)
+                        sender_username + "\tHELP\tExecutado:\t" + executed)
     print(messageserver)
 
-def who(connection, sender_nickname):
+def who(connection, sender_username):
     global users_connected
     who_message = "USUARIOS CONECTADOS:"
     for c in users_connected:
@@ -164,7 +164,7 @@ def who(connection, sender_nickname):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + '\t' +
-                     sender_nickname + "\tWHO\tExecutado:\t" + executed)
+                     sender_username + "\tWHO\tExecutado:\t" + executed)
     print(messageserver)
 
 
@@ -177,13 +177,13 @@ def erro(connection='', message='Um erro desconhecido ocorreu.', tipo="undisclos
 def thread_client(connection, address):
     """Handler para cada cliente que é executado em uma thread própria para cada um."""
     global users_connected
-    nickname = binary_message_to_string(connection.recv(NUM_BYTES))
-    if (nickname in (c[1] for c in users_connected)) or (' ' in nickname):
+    username = binary_message_to_string(connection.recv(NUM_BYTES))
+    if (username in (c[1] for c in users_connected)) or (' ' in username):
         # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
         # da lista users_connected e retorna
         print(f"ERRO: falha na conexão com o cliente em {address}, o nome " +
-              f"de usuário {nickname} já está em uso.")
-        connection.sendall(message_to_binary(f"ERRO: O usuário {nickname} já " +
+              f"de usuário {username} já está em uso.")
+        connection.sendall(message_to_binary(f"ERRO: O usuário {username} já " +
                                              "está registrado no servidor."))
         remove_connection(connection)
         return
@@ -191,9 +191,9 @@ def thread_client(connection, address):
         # senão, registra o nome de usuário com a conexão na lista users_connected
         for x in users_connected:
             if x[0] == connection:
-                x[1] = nickname
+                x[1] = username
                 break
-        print(time_string() + '\t' +nickname+"\tConectado")
+        print(time_string() + '\t' +username+"\tConectado")
     while True:
         try:
             while not socket_available(connection):
@@ -203,13 +203,13 @@ def thread_client(connection, address):
             received = binary_message_to_string(connection.recv(NUM_BYTES))
             command = str(received.split(maxsplit=1)[0])
             if command == "SEND":
-                send(connection, nickname, received)
+                send(connection, username, received)
             elif command == "SENDTO":
-                send_to(connection, nickname, received)
+                send_to(connection, username, received)
             elif received == "HELP":
-                commands_help(connection, nickname)
+                commands_help(connection, username)
             elif command == "WHO":
-                who(connection, nickname)
+                who(connection, username)
             else:
                 erro(connection, received+" não é um comando válido.")
 
@@ -217,7 +217,7 @@ def thread_client(connection, address):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
             remove_connection(connection)
             if not quitting_program:
-                print(f"{time_string()}\t{nickname}\tDesconectado.")
+                print(f"{time_string()}\t{username}\tDesconectado.")
             return
 
 if __name__ == "__main__":
