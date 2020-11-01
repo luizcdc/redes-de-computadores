@@ -116,7 +116,7 @@ def send(connection, username, message):
         # ARGUMENTO A MENSAGEM
 
     messageserver = (time_string() + "\t" +
-                     username + "\tSEND\tExecutado:\t" + executed)
+                     username + "\tSEND\tExecutado:" + executed)
     print(messageserver)
 
 
@@ -146,7 +146,7 @@ def send_to(connection, sender_username, message):
         if dest_socket:
             try:
                 dest_socket[0][0].sendall(message_to_binary(
-                    f"{sender_username}:" + message[2]))
+                    f"{sender_username}: " + message[2]))
             except OSError:
                 executed = "Não"
         else:
@@ -154,7 +154,7 @@ def send_to(connection, sender_username, message):
             erro(connection, f"Usuário {dest_user} não está conectado ao servidor.")
             # TODO: chamar erro() para sinalizar para o usuario que sendto falhou
     messageserver = (time_string() + "\t" +
-    sender_username + "\tSENDTO\tExecutado:\t" + executed)
+    sender_username + "\tSENDTO\tExecutado:" + executed)
     print(messageserver)
 
 def commands_help(connection, sender_username):
@@ -174,7 +174,7 @@ def commands_help(connection, sender_username):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + "\t" +
-                        sender_username + "\tHELP\tExecutado:\t" + executed)
+                        sender_username + "\tHELP\tExecutado:" + executed)
     print(messageserver)
 
 def who(connection, sender_username):
@@ -191,7 +191,7 @@ def who(connection, sender_username):
     except OSError:
         executed = "Não"
     messageserver = (time_string() + "\t" +
-                     sender_username + "\tWHO\tExecutado:\t" + executed)
+                     sender_username + "\tWHO\tExecutado:" + executed)
     print(messageserver)
 
 
@@ -241,7 +241,7 @@ def thread_client(connection, address):
             elif command == "WHO":
                 who(connection, username)
             else:
-                erro(connection, received+ " não é um comando válido.")
+                erro(connection, command + " não é um comando válido.")
 
         except (IndexError, AttributeError, ValueError, OSError, ConnectionError):
             # um socket só retorna com 0 bytes se a conexão está quebrada.
