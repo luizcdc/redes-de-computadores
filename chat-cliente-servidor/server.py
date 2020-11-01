@@ -102,18 +102,25 @@ def send(connection, username, message):
     if len(message) == 2:
         executed = "Sim"
         message = message[1]
+        count_sent = 0
         for user in users_connected:
             if user[0] != connection:
                 try:
                     user[0].sendall(message_to_binary(
                         f"{username}: {message}"))
+                    count_sent += 1
                 except OSError:
-                    executed = "Não"
+                    pass
+        if count_sent == 0 and len(users_connected) > 1:
+            executed = "Não"
+            erro(connection=connection, tipo="SEND_FAILURE")
+            # chama erro() para sinalizar que não conseguiu enviar a mensagem
+            # para nenhum usuário conectado (quando o remetente não é o único)
     else:
-        erro(connection, f"ERRO: SEND requer uma mensagem como argumento")
         executed = "Não"
-        # CHAMA erro() PARA SINALIZAR QUE SEND NÃO RECEBEU COMO
-        # ARGUMENTO A MENSAGEM
+        erro(connection=connection, tipo="EMPTY_SEND")
+        # chama erro() para sinalizar que o comando foi invocado sem uma
+        # mensagem a enviar
 
     messageserver = (time_string() + "\t" +
                      username + "\tSEND\tExecutado: " + executed)
@@ -130,8 +137,8 @@ def send_to(connection, sender_username, message):
     global users_connected
     message = message.split(maxsplit=2)
     if len(message) != 3:
-        erro(connection, f"ERRO: SENDTO requer um usuário alvo e uma mensagem como argumentos")
         executed = "Não"
+        erro(connection=connection,tipo="SENDTO_INVALID_ARGS")
         # chama erro() para sinalizar que o comando não recebeu os
         # argumentos corretos
     else:
@@ -149,12 +156,12 @@ def send_to(connection, sender_username, message):
                     f"{sender_username}: " + message[2]))
             except OSError:
                 executed = "Não"
+                erro(connection=connection,tipo="SENDTO_BROKEN_CONNECTION",dest_user=sender_username)
         else:
             executed = "Não"
-            erro(connection, f"Usuário {dest_user} não está conectado ao servidor.")
-            # TODO: chamar erro() para sinalizar para o usuario que sendto falhou
+            erro(connection=connection,tipo="SENDTO_INVALID_DEST",dest_user=sender_username)
     messageserver = (time_string() + "\t" +
-    sender_username + "\tSENDTO\tExecutado: " + executed)
+                     sender_username + "\tSENDTO\tExecutado: " + executed)
     print(messageserver)
 
 def commands_help(connection, sender_username):
@@ -173,6 +180,7 @@ def commands_help(connection, sender_username):
        executed = "Sim"
     except OSError:
         executed = "Não"
+        erro(connection=connection,tipo="RESPONSE_INTERRUPTED")
     messageserver = (time_string() + "\t" +
                         sender_username + "\tHELP\tExecutado: " + executed)
     print(messageserver)
@@ -190,6 +198,8 @@ def who(connection, sender_username):
         executed = "Sim"
     except OSError:
         executed = "Não"
+        erro(connection=connection, tipo="RESPONSE_INTERRUPTED")
+
     messageserver = (time_string() + "\t" +
                      sender_username + "\tWHO\tExecutado: " + executed)
     print(messageserver)
@@ -197,8 +207,8 @@ def who(connection, sender_username):
 
 def erro(connection=None, username = "", message="", tipo="undisclosed", **kwargs):
     """Função responsável pelo tratamento de erros."""
+
     if tipo == "INVALID_COMMAND":
-        print(f"ERRO: usuário {username} tentou executar um comando inválido.")
         try:
             connection.sendall(message_to_binary(
                 f"ERRO: {kwargs['command']} não é um comando válido."))
@@ -220,7 +230,7 @@ def erro(connection=None, username = "", message="", tipo="undisclosed", **kwarg
     elif tipo == "SENDTO_INVALID_ARGS":
         try:
             connection.sendall(message_to_binary(
-                f"ERRO: SENDTO requer um usuário alvo e uma mensagem como argumentos"))
+                f"ERRO: SENDTO requer um usuário destino e uma mensagem como argumentos"))
         except OSError:
             pass
     elif tipo == "SENDTO_INVALID_DEST":
@@ -242,37 +252,39 @@ def erro(connection=None, username = "", message="", tipo="undisclosed", **kwarg
     elif tipo == "USERNAME_ALREADY_USED":
         print(f"ERRO: falha no registro do cliente {kwargs['address']}, o " +
               f"nome de usuário {username} já está em uso.")
-        connection.sendall(message_to_binary(f"ERRO: O usuário {username} já " +
-                                             "está registrado no servidor."))
+        try:
+            connection.sendall(message_to_binary(f"ERRO: O usuário {username} já " +
+                                                 "está registrado no servidor."))
+        except OSError:
+            pass
+        remove_connection(connection)
     elif tipo == "NO_ARGS":
         print("Uso: python3 server_chat.py <PORT>")
     else:
-        print("Um erro não especificado ocorreu.")
+        print("ERRO: um erro não especificado ocorreu.")
         
 def thread_client(connection, address):
     """Handler para cada cliente, que é executado em uma thread própria para cada um."""
 
     global users_connected
-    username = binary_message_to_string(connection.recv(NUM_BYTES))
-    if (username in (c[1] for c in users_connected)) or (" " in username):
-        # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
-        # da lista users_connected e retorna
-        print(f"ERRO: falha na conexão com o cliente em {address}, o nome " +
-              f"de usuário {username} já está em uso.")
-        connection.sendall(message_to_binary(f"ERRO: O usuário {username} já " +
-                                             "está registrado no servidor."))
-        remove_connection(connection)
-        return
-    else:
-        # senão, registra o nome de usuário com a conexão na lista users_connected
-        for x in users_connected:
-            if x[0] == connection:
-                x[1] = username
-                break
-        connection.sendall(message_to_binary(f"Conectado com Sucesso"))
-        print(time_string() + "\t" +username+"\tConectado")
-    while True:
-        try:
+    try:
+        username = binary_message_to_string(connection.recv(NUM_BYTES))
+        if (username in (c[1] for c in users_connected)) or (" " in username):
+            # caso o nome de usuario estiver em uso, desconecta, exclui a conexão
+            # da lista users_connected e retorna
+            print(f"ERRO: falha na conexão com o cliente em {address}, o nome " +
+                f"de usuário {username} já está em uso.")
+            erro(connection=connection,tipo="USERNAME_ALREADY_USED",username=username,address=address)
+            return
+        else:
+            # senão, registra o nome de usuário com a conexão na lista users_connected
+            for x in users_connected:
+                if x[0] == connection:
+                    x[1] = username
+                    break
+            connection.sendall(message_to_binary(f"Conectado com Sucesso"))
+            print(time_string() + "\t" +username+"\tConectado")
+        while True:
             while not socket_available(connection):
                 # evita que a thread bloqueie tentando receber do socket,
                 # o que permite que se feche a conexão sem causar uma exceção 
@@ -288,18 +300,18 @@ def thread_client(connection, address):
             elif command == "WHO":
                 who(connection, username)
             else:
-                erro(connection, command + " não é um comando válido.")
+                erro(connection=connection,tipo="INVALID_COMMAND",username=username,command=command)
 
-        except (IndexError, AttributeError, ValueError, OSError, ConnectionError):
-            # um socket só retorna com 0 bytes se a conexão está quebrada.
-            remove_connection(connection)
-            if not quitting_program:
-                print(f"{time_string()}\t{username}\tDesconectado.")
-            return
+    except (IndexError, AttributeError, ValueError, OSError, ConnectionError):
+        # um socket só retorna com 0 bytes se a conexão está quebrada.
+        remove_connection(connection)
+        if not quitting_program:
+            print(f"{time_string()}\t{username}\tDesconectado.")
+        return
 
 if __name__ == "__main__":
     if len(argv) < 2:
-        print("Uso: python3 server_chat.py <PORT>")
+        erro(tipo="NO_ARGS")
     else:
         try:
             # cria um socket servidor na porta passada como argumento do programa
